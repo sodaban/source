@@ -1,6 +1,8 @@
+<!DOCTYPE html>
+<html>
 <?php
 ob_start();
-// formulaireInscription.php
+// formulaireInscription1.php
 session_start();
 $db = new SQLite3('petanqueLPP.db');
 
@@ -9,43 +11,12 @@ $db->exec("CREATE TABLE IF NOT EXISTS adherents (id INTEGER PRIMARY KEY, nom TEX
 $db->exec("CREATE TABLE IF NOT EXISTS tournois (id INTEGER PRIMARY KEY, nom TEXT, date TEXT, time TEXT, nom_joueurs_max INT, type TEXT, etat INTEGER)");
 $db->exec("CREATE TABLE IF NOT EXISTS participants (id INTEGER PRIMARY KEY, adherentId INTEGER, tournoiId1 INTEGER, tournoiId2 INTEGER, tournoiId3 INTEGER, tournoiId4 INTEGER)");
 
-if ($_SERVER["REQUEST_METHOD"] === "POST")
-{
-    // Inscription d'un nouveau participant
-    error_log("Inscription d'un nouveau participant");
-    if(isset($_POST['nom'], $_POST['prenom'], $_POST['tournoiId1'], $_POST['tournoiId2'], $_POST['tournoiId3'], $_POST['tournoiId4'])) {
-        error_log("Les données du formulaire sont présentes");  // Ajoutez cette ligne
-        $nom = SQLite3::escapeString($_POST['nom']);
-        $prenom = SQLite3::escapeString($_POST['prenom']);
-        $tournoiId1 = SQLite3::escapeString($_POST['tournoiId1']);
-        $tournoiId2 = SQLite3::escapeString($_POST['tournoiId2']);
-        $tournoiId3 = SQLite3::escapeString($_POST['tournoiId3']);
-        $tournoiId4 = SQLite3::escapeString($_POST['tournoiId4']);
-
-        // Récupérer l'ID du membre à partir du nom et du prénom
-        $adherentIdResult = $db->query("SELECT id FROM adherents WHERE nom='$nom' AND prenom='$prenom'");
-        $adherentIdRow = $adherentIdResult->fetchArray();
-        $adherentId = $adherentIdRow['id'];
-
-        if($adherentId) {
-            $db->exec("INSERT INTO participants (adherentId, tournoiId1, tournoiId2, tournoiId3, tournoiId4) VALUES ('$adherentId', '$tournoiId1', '$tournoiId2', '$tournoiId3', '$tournoiId4')");
-            error_log("Insertion réussie"); // Ajoutez cette ligne
-            header('Location: ' . $_SERVER['PHP_SELF']);
-            exit();
-        } else {
-            $_SESSION['message'] = "Vous n'êtes pas dans la liste des adhérents";
-            error_log("Adhérent non trouvé, message d'erreur défini."); // Ajoutez cette ligne
-        }
-    }
+if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideInscription.php') {
+    echo '<div id="error-message">' . $_SESSION['message'] . '</div>';
+    unset($_SESSION['message']);
 }
-
-// Affichage des participants pour chaque tournoi
-$result = $db->query("SELECT adherentId, COUNT(*) as count FROM participants GROUP BY adherentId");
-error_log("Recuperation des participants pour chaque tournoi");
 ?>
 
-<!DOCTYPE html>
-<html>
 <head>
     <title>Formulaire d'inscription</title>
     <style>
@@ -60,120 +31,205 @@ error_log("Recuperation des participants pour chaque tournoi");
             margin-top: 200px; /* Ajoutez une marge en haut pour éviter que le logo ne chevauche le formulaire */
             margin-left: 30.00%; /* Déplace le conteneur vers la droite de 2/3 de l'écran */
         }
-        
+
         #error-message {
             display: none;
             color: red;
         }
+
         #success-message {
             display: none;
             background-color: lightgreen;
             color: darkgreen;
         }
+
         .disabled-link {
             pointer-events: none;
             color: grey;
         }
+            /* Style pour l'effet d'impulsion */
+            .icone {
+            font-size: 24px;
+            transition: transform 0.2s ease-in-out;
+			display: inline-block;
+        }
+        .icone:hover {
+            animation: pulse 0.5s alternate 3; /* Ajout de cette ligne */
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+            /* Style pour l'icône 9 */
+        .icone9 img {
+        max-height: 190px; /* Ajustez la hauteur selon vos besoins */
+        max-width: 190px;  /* Ajustez la largeur selon vos besoins */
+        margin-left: 15px;
+        margin-bottom: -22px;
+    }
+        /* Style pour les nouveaux logos */
+        .nouveaux-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+			margin-top: 80px; /* Ajoutez cette ligne pour augmenter l'espace entre les lignes */
+        }
+        .nouveaux-logos img {
+            max-height: 160px; /* Ajustez la hauteur selon vos besoins */
+            margin: 0 60px; /* Espacement entre les logos */
+        }
     </style>
     <script>
-        function validateForm() {
-            error_log("Validation forme appelée")
+        window.onload = function() {
+            document.querySelector('form').addEventListener('submit', validateForm);
+        }
+    </script>
+    <script>
+        function validateForm(event) {
+            event.preventDefault(); // Prevent form submission
+            console.log("Validation forme appelee");
             var nom = document.getElementById('nom').value;
             var prenom = document.getElementById('prenom').value;
             var tournois = document.querySelectorAll('input[name^="tournoi"]:checked');
+            var nombreDeCasesCochees = tournois.length;
+            // Duration in mS of the setTimeout function 
+            var msgduration = 800; 
+            console.log("Nombre de cases cochees : " + nombreDeCasesCochees);
+
             var errorMessage = document.getElementById('error-message');
             if (nom == "" && prenom == "") {
-                error_log("Le nom et le prénom n'ont pas été saisis")
                 errorMessage.textContent = 'Veuillez saisir votre nom et prénom !';
                 errorMessage.style.display = 'block';
+                setTimeout(function() {
+                    errorMessage.style.display = 'none';
+                }, msgduration);
+                return false; // Add this line to return false when there is an error
             } else if (nom == "") {
-                error_log("Le nom n'a pas été saisi")
                 errorMessage.textContent = 'Veuillez saisir votre nom !';
                 errorMessage.style.display = 'block';
+                setTimeout(function() {
+                    errorMessage.style.display = 'none';
+                }, msgduration);
+                return false; // Add this line to return false when there is an error
             } else if (prenom == "") {
-                error_log("Le prénom n'a pas été saisi")
                 errorMessage.textContent = 'Veuillez saisir votre prénom !';
                 errorMessage.style.display = 'block';
+                setTimeout(function() {
+                    errorMessage.style.display = 'none';
+                }, msgduration);
+                return false; // Add this line to return false when there is an error
             } else if (tournois.length == 0) {
-                error_log("Aucun tournoi n'a pas été coché")
                 errorMessage.textContent = 'Veuillez cocher le tournoi ou les tournois désiré(s) !';
+                setTimeout(function() {
+                    errorMessage.style.display = 'none';
+                }, msgduration);
                 errorMessage.style.display = 'block';
+                return false; // Add this line to return false when there is an error
             } else {
-                error_log("L'inscription est validée")
                 // Le formulaire est valide
-                errorMessage.style.display = 'Le formulaire est valide !';
-                errorMessage.style.display = 'block';
-               return true;
+                // afficher les données du formulaire
+                console.log("Nom : " + nom + " Prénom : " + prenom);
+                for (var i = 0; i < tournois.length; i++) {
+                    console.log("Tournoi " + (i + 1) + " : " + tournois[i].value);
+                }
+
+                // soumettre le formulaire
+                document.querySelector('form').submit();
+                return true; // Add this line to return true when the form is valid
             }
-            setTimeout(function() {
-                errorMessage.style.display = 'none';
-            }, 3000);
-            return false;
         }
     </script>
 </head>
-<body>
 
-    <div class="form-container">
+<body>
+<?php
+    // Liens à exécuter (remplacez par vos propres URLs)
+    $lien1 = 'https://lespétanquistesputeaux.com';
+    $lien2 = 'https://lespétanquistesputeaux.com/A-propos/';
+    $lien3 = 'https://lespétanquistesputeaux.com/Charte/';
+    $lien4 = 'https://lespétanquistesputeaux.com/Contacts/';
+    $lien5 = 'https://lespétanquistesputeaux.com/Tournois/';
+    $lien6 = 'https://lespétanquistesputeaux.com/Liste-Partenaires/';
+    $lien7 = 'https://lespétanquistesputeaux.com/INFOS/';
+    $lien8 = 'https://lespétanquistesputeaux.com/LES/';
+    $lien9 = 'https://lespétanquistesputeaux.com/SPONSORS/';
+
+
+    // Icônes (remplacez par les icônes de votre choix)
+    $icone1 = '<a href="' . $lien1 . '"><i class="icone"><img src="../images/accueilUrl.jpg" alt="Icône1"></i></a>';
+    $icone2 = '<a href="' . $lien2 . '"><i class="icone"><img src="../images/aproposUrl.jpg" alt="Icône2"></i></a>';
+    $icone3 = '<a href="' . $lien3 . '"><i class="icone"><img src="../images/charteUrl.png" alt="Icône3"></i></a>';
+    $icone4 = '<a href="' . $lien4 . '"><i class="icone"><img src="../images/contactUrl.jpg" alt="Icône4"></i></a>';
+    $icone5 = '<a href="' . $lien5 . '"><i class="icone"><img src="../images/tournoisUrl.jpg" alt="Icône5"></i></a>';
+    $icone6 = '<a href="' . $lien6 . '"><i class="icone"><img src="../images/partenairesUrl.png" alt="Icône6"></i></a>';
+    $icone7 = '<a href="' . $lien7 . '"><i class="icone"><img src="../images/infosUrl.jpg" alt="Icône7"></i></a>';
+    $icone8 = '<a href="' . $lien8 . '"><i class="icone"><img src="../images/lesplusUrl.gif" alt="Icône8"></i></a>';
+    
+    // Icône 9 avec la classe spécifique
+    $icone9 = '<a href="' . $lien9 . '"><i class="icone icone9"><img src="../images/sponsorsUrl.jpg" alt="Icône9"></i></a>';
+
+    
+    // Affichage des icônes avec les liens
+    echo $icone1 . $icone2 . $icone3 . $icone4 . $icone5 . $icone6 . $icone7 . $icone8 . $icone9;
+	echo '<br>'; // Saut de ligne
+	
+?>
+
+    <div id="error-message"></div>
+    <form method="post" action="valideInscription.php">
         <?php
-            $result = $db->query("SELECT id, nom FROM tournois WHERE etat=1");
-            $tournois = [];
-            while($row = $result->fetchArray()) {
-                $tournois[] = $row;
-            }
-            echo '<h1>Formulaire d\'inscription</h1>';
-            if (!empty($tournois)) {
-                // Il y a des tournois ouverts
-                echo '<form method="post" action="valideInscription.php" onsubmit="return validateForm()">
+        // Nombre de tournois ouverts
+        $result = $db->query("SELECT id, nom FROM tournois WHERE etat=1");
+        $tournois = [];
+        while ($row = $result->fetchArray()) {
+            $tournois[] = $row;
+        }
+        echo '<h1>Formulaire d\'inscription</h1>';
+        if (!empty($tournois)) {
+            // Il y a des tournois ouverts
+            echo '<form method="post" action="valideInscription.php">
                     <label for="nom">Nom:</label><br>
                     <input type="text" id="nom" name="nom"><br>
                     <label for="prenom">Prénom:</label><br>
                     <input type="text" id="prenom" name="prenom"><br>
-                    <label for="tournoi">Tournoi:</label><br>';
-                error_log("Affichage des tournois ouverts"); // Ajoutez cette ligne
-                foreach($tournois as $tournoi) {
-                    $tournoiId = $tournoi['id'];
-                    $participantCountResult = $db->query("SELECT COUNT(*) as count FROM participants WHERE tournoiId1='$tournoiId' OR tournoiId2='$tournoiId' OR tournoiId3='$tournoiId' OR tournoiId4='$tournoiId'");
-                    $participantCountRow = $participantCountResult->fetchArray();
-                    $participantCount = $participantCountRow['count'];
-                    echo '<input type="checkbox" id="tournoi' . $tournoiId . '" name="tournoi" value="' . $tournoiId . '"><label for="tournoi' . $tournoiId . '">' . $tournoi['nom'] . ' (' . $participantCount . ' participants)</label><br>';
-                }
-                echo '<input type="submit" value="Je m\'inscris">
-                </form>';
-            } else {
-                // Il n'y a pas de tournois ouverts
-                echo '<p class="no-tournament-message">Vous ne pouvez pas vous inscrire pour l\'instant, il n\'y a pas de tournoi ouvert</p>';
+                    <label for="tournoi">Tournoi:</label><br>              
+                    ';
+            error_log("Affichage des donnees du formulaire pour l'inscription"); // Ajoutez cette ligne
+            // Ajouter une variable pour stockert le nombre de tournois ouverts
+            $nombreTournoisOuverts = count($tournois);
+            // Afficher les tournois ouverts
+            error_log("Nombre de tournois ouverts : " . $nombreTournoisOuverts); // Ajoutez cette ligne
+            foreach ($tournois as $tournoi) {
+                $tournoiId = $tournoi['id'];
+                // loguer le nombre de participants pour chaque tournoi
+                $participantCountResult = $db->query("SELECT COUNT(*) as count FROM participants WHERE tournoiId1='$tournoiId' OR tournoiId2='$tournoiId' OR tournoiId3='$tournoiId' OR tournoiId4='$tournoiId'");
+                $participantCountRow = $participantCountResult->fetchArray();
+                $participantCount = $participantCountRow['count'];
+                $dateResult = $db->query("SELECT date FROM tournois WHERE id='$tournoiId'");
+                $dateRow = $dateResult->fetchArray();
+                $date = $dateRow['date'];
+                error_log("Tournoi ID : " . $tournoiId . " - Nom du tournoi : " . $tournoi['nom'] . " Date : " . $date . " Inscrits : " . $participantCount); // Ajoutez cette ligne
+                echo '<input type="checkbox" id="tournoi' . $tournoiId . '" name="tournoi[]" value="' . $tournoiId . '"><label for="tournoi' . $tournoiId . '">' . $tournoi['nom'] . ' (' . $date . ') (' . $participantCount . ' inscrits)</label><br>';
             }
-        ?>
-        <div id="error-message"></div>
-        <a href="https://xn--lesptanquistesputeaux-e5b.com/Tournois/">Retour à la page précédente</a>
-        <?php
-        if(isset($_SESSION['message']) && $_SESSION['message'] !== '') {
-            echo '<div id="success-message" style="background-color: lightgreen; color: darkgreen;">' . $_SESSION['message'] . '</div>';
-            unset($_SESSION['message']);
+            // il faut ajouter les tournois Id restants pour poster dans le formulaire d'inscription avec la valeur null
+            for ($i = 0; $i < 4 - $nombreTournoisOuverts; $i++) {
+                if ($i == 0 && $nombreTournoisOuverts == 1) {
+                    echo '<input type="hidden" name="tournoi[]" value="' . $tournois[0]['id'] . '">';
+                } else {
+                    echo '<input type="hidden" name="tournoi[]" value=0>';
+                }
+            }
+        } else {
+            // Il n'y a pas de tournois ouverts
+            echo '<p class="no-tournament-message">Vous ne pouvez pas vous inscrire pour l\'instant, il n\'y a pas de tournoi ouvert</p>';
         }
+
+
         ?>
-        <div>
-            <?php
-            while($row = $result->fetchArray()) {
-                if(isset($row['adherentId']) && isset($row['count'])) {
-                    echo "Adhérent ID: " . $row['adherentId'] . " - Nombre de tournois auxquels il participe: " . $row['count'] . "<br>";
-                }
-            }
-            ?>
-            <a href="listeParticipantsAuxTournois.php" class="<?php echo empty($tournois) ? 'disabled-link' : ''; ?>">Liste des participants aux tournois</a>
-        </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            var successMessage = document.getElementById('success-message');
-            if (successMessage && successMessage.textContent !== '') {
-                successMessage.style.display = 'block';
-                setTimeout(function() {
-                    successMessage.style.display = 'none';
-                }, 5000);
-            }
-        });
-    </script>
+        <!-- Vos champs de formulaire ici -->
+        <button type="submit">Je m'inscris</button>
+    </form>
+
 </body>
+
 </html>

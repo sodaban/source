@@ -1,67 +1,137 @@
+<?php
+session_start();
+ob_start();
+?>
 <!DOCTYPE html>
 <html>
-<?php
-ob_start();
-// formulaireInscription1.php
-session_start();
-$db = new SQLite3('petanqueLPP.db');
 
-// Création des tables si elles n'existent pas encore
-$db->exec("CREATE TABLE IF NOT EXISTS adherents (id INTEGER PRIMARY KEY, nom TEXT, prenom TEXT, email TEXT, date_inscription TEXT, matricule INTEGER)");
-$db->exec("CREATE TABLE IF NOT EXISTS tournois (id INTEGER PRIMARY KEY, nom TEXT, date TEXT, time TEXT, nom_joueurs_max INT, type TEXT, etat INTEGER)");
-$db->exec("CREATE TABLE IF NOT EXISTS participants (id INTEGER PRIMARY KEY, adherentId INTEGER, tournoiId1 INTEGER, tournoiId2 INTEGER, tournoiId3 INTEGER, tournoiId4 INTEGER)");
 
-if ($_SERVER["REQUEST_METHOD"] === "POST")
-{
-    error_log("Le formulaire a été soumis"); // Ajoutez cette ligne
+<body>
+    <form method="POST" action="valideInscription.php">
+        <label for="nom">Nom:</label>
+        <input type="text" name="nom" id="nom" required>
+        <br>
+        <label for="prenom">Prénom:</label>
+        <input type="text" name="prenom" id="prenom" required>
+        <br>
+        <label for="tournoiId1">Tournoi 1:</label>
+        <input type="checkbox" name="tournoiId1" id="tournoiId1" value="11">
+        <br>
+        <label for="tournoiId2">Tournoi 2:</label>
+        <input type="checkbox" name="tournoiId2" id="tournoiId2" value="12">
+        <br>
+        <label for="tournoiId3">Tournoi 3:</label>
+        <input type="checkbox" name="tournoiId3" id="tournoiId3" value="13">
+        <br>
+        <label for="tournoiId4">Tournoi 4:</label>
+        <input type="checkbox" name="tournoiId4" id="tournoiId4" value="0">
+        <br>
+        <input type="submit" value="Submit">
+    </form>
 
-    // Inscription d'un nouveau participant
-    error_log("Inscription d'un nouveau participant");
-    if(isset($_POST['nom'], $_POST['prenom'], $_POST['tournoiId1'], $_POST['tournoiId2'], $_POST['tournoiId3'], $_POST['tournoiId4'])) {
-        error_log("Les données du formulaire sont présentes");  // Ajoutez cette ligne
-        header("Location: successInscription.html");
-        $nom = SQLite3::escapeString($_POST['nom']);
-        $prenom = SQLite3::escapeString($_POST['prenom']);
-        $tournoiId1 = SQLite3::escapeString($_POST['tournoiId1']);
-        $tournoiId2 = SQLite3::escapeString($_POST['tournoiId2']);
-        $tournoiId3 = SQLite3::escapeString($_POST['tournoiId3']);
-        $tournoiId4 = SQLite3::escapeString($_POST['tournoiId4']);
+    <?php
+    // Debugging code
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
 
-        // Récupérer l'ID du membre à partir du nom et du prénom
-        $adherentIdResult = $db->query("SELECT id FROM adherents WHERE nom='$nom' AND prenom='$prenom'");
+    // Rest of your code...
+    // formulaireInscription.php
+    error_log("Le formulaire a ete soumis"); // Ajoutez cette ligne
+    error_log("Inscription d'un nouveau participant" . print_r($_POST, true)); // Ajoutez cette ligne
+    
+    $nom = isset($_POST['nom']) ? $_POST['nom'] : 0;
+    $prenom = isset($_POST['prenom']) ? $_POST['prenom'] : 0;
+    $tournoiId1 = isset($_POST['tournoiId1']) ? $_POST['tournoiId1'] : 0;
+    $tournoiId2 = isset($_POST['tournoiId2']) ? $_POST['tournoiId2'] : 0;
+    $tournoiId3 = isset($_POST['tournoiId3']) ? $_POST['tournoiId3'] : 0;
+    $tournoiId4 = isset($_POST['tournoiId4']) ? $_POST['tournoiId4'] : 0;
+    error_log("nom: $nom, prénom: $prenom, tournoiId1: $tournoiId1, tournoiId2: $tournoiId2, tournoiId3: $tournoiId3, tournoiId4: $tournoiId4"); // Ajoutez cette ligne
+    $db = new SQLite3('petanqueLPP.db');
+
+    // Création des tables si elles n'existent pas encore
+    $db->exec("CREATE TABLE IF NOT EXISTS adherents (id INTEGER PRIMARY KEY, nom TEXT, prenom TEXT, email TEXT, date_inscription TEXT, matricule INTEGER)");
+    $db->exec("CREATE TABLE IF NOT EXISTS tournois (id INTEGER PRIMARY KEY, nom TEXT, date TEXT, time TEXT, nom_joueurs_max INT, type TEXT, etat INTEGER)");
+    $db->exec("CREATE TABLE IF NOT EXISTS participants (id INTEGER PRIMARY KEY, adherentId INTEGER, tournoiId1 INTEGER, tournoiId2 INTEGER, tournoiId3 INTEGER, tournoiId4 INTEGER)");
+
+    error_log("Insertion reussie"); // Ajoutez cette ligne
+    if (isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] === "POST") {
+        error_log("Le formulaire a ete soumis"); // Ajoutez cette ligne
+
+        // Inscription d'un nouveau participant au tournoi
+        error_log("Inscription d'un nouveau participant : " . print_r($_POST, true)); // Ajoutez cette ligne
+        error_log("nom: $nom, prénom: $prenom, tournoiId1: $tournoiId1, tournoiId2: $tournoiId2, tournoiId3: $tournoiId3, tournoiId4: $tournoiId4"); // Ajoutez cette ligne
+
+        // Récupérer l'ID de l'adhérent à partir du nom et du prénom
+        $stmt = $db->prepare("SELECT id FROM adherents WHERE LOWER(nom) = LOWER(?) AND LOWER(prenom) = LOWER(?)");
+        $stmt->bindValue(1, $nom, SQLITE3_TEXT);
+        $stmt->bindValue(2, $prenom, SQLITE3_TEXT);
+        $adherentIdResult = $stmt->execute();
         $adherentIdRow = $adherentIdResult->fetchArray();
-        $adherentId = $adherentIdRow['id'];
+        error_log("adherent result : " . print_r($adherentIdRow, true)); // Ajoutez cette ligne
+        error_log("nom: $nom, prénom: $prenom, tournoiId1: $tournoiId1, tournoiId2: $tournoiId2, tournoiId3: $tournoiId3, tournoiId4: $tournoiId4"); // Ajoutez cette ligne
 
-        if($adherentId) {
+        // Vérifier si l'adhérent est déjà inscrit
+        if ($adherentIdRow) {
+            $adherentId = $adherentIdRow['id'];
+            error_log("ID de l'adherent: $adherentId" . " Adherent trouve dans la table adherents"); // Adherent trouvé dans la base de données
+            
+            // if faut vérifier si l'adhérent est déjà inscrit à ces tournois
+            $stmt = $db->prepare("SELECT * FROM participants WHERE adherentId = ? AND tournoiId1 = ? AND tournoiId2 = ? AND tournoiId3 = ? AND tournoiId4 = ?");
+            $stmt->bindValue(1, $adherentId, SQLITE3_INTEGER);
+
+            // Inscription d'un nouveau participant au tournoi
+            $stmt->bindValue(2, $tournoiId1, SQLITE3_INTEGER);
+            $stmt->bindValue(3, $tournoiId2, SQLITE3_INTEGER);
+            $stmt->bindValue(4, $tournoiId3, SQLITE3_INTEGER);
+            $stmt->bindValue(5, $tournoiId4, SQLITE3_INTEGER);
+            $participantResult = $stmt->execute();
+            $participantRow = $participantResult->fetchArray();
+            error_log("participant result : " . print_r($participantRow, true)); // Ajoutez cette ligne
+            error_log("nom: $nom, prénom: $prenom, tournoiId1: $tournoiId1, tournoiId2: $tournoiId2, tournoiId3: $tournoiId3, tournoiId4: $tournoiId4"); // Ajoutez cette ligne
+
+            // Si l'adhérent est déjà inscrit, on met à jour ses choix
+            if ($participantRow) {
+                error_log("Adherent deja inscrit, prend en compte ses nouveaux choix"); // Ajoutez cette ligne
+                $db->exec("UPDATE participants SET tournoiId1 = '$tournoiId1', tournoiId2 = '$tournoiId2', tournoiId3 = '$tournoiId3', tournoiId4 = '$tournoiId4' WHERE adherentId = '$adherentId'");
+                header("Location: successInscription.html");
+                $_SESSION['message'] = "Adherent deja inscrit, prend en compte ses nouveaux choix";
+                exit();
+            } else {
+                error_log("Adherent inscrit pour la premiere fois, prend en compte ses tournois"); // Ajoutez cette ligne
+                $db->exec("INSERT INTO participants (adherentId, tournoiId1, tournoiId2, tournoiId3, tournoiId4) VALUES ('$adherentId', '$tournoiId1', '$tournoiId2', '$tournoiId3', '$tournoiId4')");
+                error_log("Insertion reussie"); // Ajoutez cette ligne
+                header('Location: ' . $_SERVER['PHP_SELF']);
+                header("Location: successInscription.html");
+                exit();
+            }
+        } else {
+            $adherentId = null; // or handle the case when no row is found
+            error_log("Adherent non trouve dans le base de donnee"); // Ajoutez cette ligne
+            // ici il faut retourner à la page précédente avec un message d'erreur
+            header("Location: formulaireInscription.php");
+            $_SESSION['message'] = "Adherent non trouve dans le base de donnee";
+            exit();
+        }
+        $_SESSION['message'] = "Adherent non trouve dans le base de donnee";
+        error_log("ID de l'adherent: $adherentId"); // Ajoutez un participant avec les tournois sélectionnés
+        if ($adherentId) {
             $db->exec("INSERT INTO participants (adherentId, tournoiId1, tournoiId2, tournoiId3, tournoiId4) VALUES ('$adherentId', '$tournoiId1', '$tournoiId2', '$tournoiId3', '$tournoiId4')");
-            error_log("Insertion réussie"); // Ajoutez cette ligne
+            error_log("Insertion reussie"); // Ajoutez cette ligne
             header('Location: ' . $_SERVER['PHP_SELF']);
+            header("Location: successInscription.html");
             exit();
         } else {
-            $_SESSION['message'] = "Vous n'êtes pas dans la liste des adhérents";
-            error_log("Adhérent non trouvé, message d'erreur défini."); // Ajoutez cette ligne
+            header("Location: formulaireInscription.php");
+            $_SESSION['message'] = "Insertion dans la base de donnees non reussie";
+            error_log("Insertion dans la base de donnees non reussie"); // Ajoutez cette ligne
+            exit();
         }
         exit;
-    } 
-    else {
-        // No checkbox is checked, display error message
-        echo "<script>
-            console.log('Aucun tournoi n\'a été coché');
-            document.addEventListener('DOMContentLoaded', function() {
-                var errorMessage = document.getElementById('error-message');
-                if (errorMessage) {
-                    errorMessage.textContent = 'Veuillez cocher le(s) tournoi(s) désiré(s) !';
-                    errorMessage.style.display = 'block';
-                }
-            });
-        </script>";
+    } else {
+        $_SESSION['message'] = "Les donnes du formulaire ne sont pas valides";
+        error_log("Les donnes du formulaire ne sont pas valides");  // Ajoutez cette ligne
     }
-}
-
-// Affichage des participants pour chaque tournoi
-$result = $db->query("SELECT adherentId, COUNT(*) as count FROM participants GROUP BY adherentId");
-error_log("Recuperation des participants pour chaque tournoi");
-?>
-
+    ?>
+</body>';
 
 </html>
