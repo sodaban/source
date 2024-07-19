@@ -127,13 +127,13 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
                 return false; // Add this line to return false when there is an error
             } else {
                 // Le formulaire est valide
-                // afficher les données du formulaire
+                // afficher les données du formulaire: nom, prénom et les tournois sélectionnés
                 console.log("Nom : " + nom + " Prénom : " + prenom);
                 for (var i = 0; i < tournois.length; i++) {
                     console.log("Tournoi " + (i + 1) + " : " + tournois[i].value);
                 }
 
-                // ici le formulaire est valide, et je veux savoir si le participant est un membre du club, pour cela il le vérifier dans la table adherents
+                // ici le formulaire est valide, il faut vérifier si le participant est un membre du club, pour cela il le vérifier dans la table adherents
 
                 // je vais utiliser une requête AJAX pour vérifier si le participant est un membre du club
                 // si le participant est un membre du club, je vais soumettre le formulaire

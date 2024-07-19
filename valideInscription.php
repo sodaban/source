@@ -24,7 +24,7 @@ ob_start();
         <input type="checkbox" name="tournoiId3" id="tournoiId3" value="13">
         <br>
         <label for="tournoiId4">Tournoi 4:</label>
-        <input type="checkbox" name="tournoiId4" id="tournoiId4" value="1" <?php if(isset($_POST['tournoiId4']) && $_POST['tournoiId4'] == '0') echo 'checked'; ?>>
+        <input type="checkbox" name="tournoiId4" id="tournoiId4" value="1" <?php if (isset($_POST['tournoiId4']) && $_POST['tournoiId4'] == '0') echo 'checked'; ?>>
         <br>
         <input type="submit" value="Submit">
     </form>
@@ -88,11 +88,22 @@ ob_start();
                 }
 
                 // Vérifier si l'adhérent est déjà inscrit aux mêmes tournois
-                if ($participantRow['nom'] == $tournoiId1 && $participantRow['prenom'] == $tournoiId1 && $participantRow['tournoiId1'] == $tournoiId1 && $participantRow['tournoiId2'] == $tournoiId2 && $participantRow['tournoiId3'] == $tournoiId3 && $participantRow['tournoiId4'] == $tournoiId4) {
-                    error_log("Adherent deja inscrit aux tournois, prend en compte ses nouveaux choix"); // Ajoutez cette ligne
+                // Vérifier si l'adhérent est déjà inscrit aux tournois
+                $stmt = $db->prepare("SELECT * FROM participants WHERE adherentId = ?");
+                $stmt->bindValue(1, $adherentId, SQLITE3_INTEGER);
+                $participantResult = $stmt->execute();
+
+                // Vérifier si l'adhérent est déjà inscrit
+                if ($participantRow = $participantResult->fetchArray()) {
+                    // Mettre à jour les tournois existants avec les nouvelles valeurs
                     $db->exec("UPDATE participants SET tournoiId1 = '$tournoiId1', tournoiId2 = '$tournoiId2', tournoiId3 = '$tournoiId3', tournoiId4 = '$tournoiId4' WHERE adherentId = '$adherentId'");
                     header("Location: successInscription.html");
                     $_SESSION['message'] = "Adherent deja inscrit, prend en compte ses nouveaux choix";
+                    exit();
+                } else {
+                    // Insérer un nouvel enregistrement dans la table participants
+                    $db->exec("INSERT INTO participants (adherentId, tournoiId1, tournoiId2, tournoiId3, tournoiId4) VALUES ('$adherentId', '$tournoiId1', '$tournoiId2', '$tournoiId3', '$tournoiId4')");
+                    header("Location: successInscription.html");
                     exit();
                 }
             }
@@ -129,7 +140,7 @@ ob_start();
         exit;
     } else {
         $_SESSION['message'] = "Les donnees du formulaire ne sont pas valides";
-        error_log("Les donnes du formulaire ne sont pas valides");  // Ajoutez cette ligne
+        error_log("Les donnees du formulaire ne sont pas valides");  // Ajoutez cette ligne
     }
     ?>
 </body>';
