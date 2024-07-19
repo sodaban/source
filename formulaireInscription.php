@@ -133,9 +133,40 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
                     console.log("Tournoi " + (i + 1) + " : " + tournois[i].value);
                 }
 
-                // soumettre le formulaire
-                document.querySelector('form').submit();
-                return true; // Add this line to return true when the form is valid
+                // ici le formulaire est valide, et je veux savoir si le participant est un membre du club, pour cela il le vérifier dans la table adherents
+
+                // je vais utiliser une requête AJAX pour vérifier si le participant est un membre du club
+                // si le participant est un membre du club, je vais soumettre le formulaire
+                // sinon, je vais afficher un message d'erreur
+
+                // Code AJAX pour vérifier si le participant est un membre du club
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'verifierMembre.php', true); // Assuming that 'verifierMembre.php' is located in the 'source' folder
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.membre) {
+                            // Le participant est un membre du club, soumettre le formulaire
+                            document.querySelector('form').submit();
+                        } else {
+                            // Le participant n'est pas un membre du club, afficher un message d'erreur
+                            var errorMessage = document.getElementById('error-message');
+                            errorMessage.textContent = 'Vous devez être membre du club pour vous inscrire.';
+                            errorMessage.style.display = 'block';
+                            setTimeout(function() {
+                                errorMessage.style.display = 'none';
+                            }, 2000);
+                        }
+                    }
+                };
+                var formData = new FormData();
+                formData.append('nom', nom);
+                formData.append('prenom', prenom);
+                for (var i = 0; i < tournois.length; i++) {
+                    formData.append('tournoiId' + (i + 1), tournois[i].value);
+                }
+                xhr.send(formData);
             }
         }
     </script>
@@ -211,7 +242,7 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
                 error_log("Tournoi ID : " . $tournoiId . " - Nom du tournoi : " . $tournoi['nom'] . " Date : " . $date . " Inscrits : " . $participantCount); // Ajoutez cette ligne
                 echo '<input type="checkbox" id="tournoi' . $tournoiId . '" name="tournoi[]" value="' . $tournoiId . '"><label for="tournoi' . $tournoiId . '">' . $tournoi['nom'] . ' (' . $date . ') (' . $participantCount . ' inscrits)</label><br>';
             }
-            // il faut ajouter les tournois Id restants pour poster dans le formulaire d'inscription avec la valeur null
+            // il faut ajouter les tournois Id restants avant de poster dans le formulaire d'inscription avec la valeur null
             for ($i = 0; $i < 4 - $nombreTournoisOuverts; $i++) {
                 if ($i == 0 && $nombreTournoisOuverts == 1) {
                     echo '<input type="hidden" name="tournoi[]" value="' . $tournois[0]['id'] . '">';
