@@ -15,6 +15,8 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
     echo '<div id="error-message">' . $_SESSION['message'] . '</div>';
     unset($_SESSION['message']);
 }
+
+
 ?>
 
 <head>
@@ -24,12 +26,16 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
             background-color: black;
             color: white;
         }
+
         a {
             color: white;
         }
+
         .form-container {
-            margin-top: 200px; /* Ajoutez une marge en haut pour éviter que le logo ne chevauche le formulaire */
-            margin-left: 30.00%; /* Déplace le conteneur vers la droite de 2/3 de l'écran */
+            margin-top: 200px;
+            /* Ajoutez une marge en haut pour éviter que le logo ne chevauche le formulaire */
+            margin-left: 30.00%;
+            /* Déplace le conteneur vers la droite de 2/3 de l'écran */
         }
 
         #error-message {
@@ -47,36 +53,53 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
             pointer-events: none;
             color: grey;
         }
-            /* Style pour l'effet d'impulsion */
-            .icone {
+
+        /* Style pour l'effet d'impulsion */
+        .icone {
             font-size: 24px;
             transition: transform 0.2s ease-in-out;
-			display: inline-block;
+            display: inline-block;
         }
+
         .icone:hover {
-            animation: pulse 0.5s alternate 3; /* Ajout de cette ligne */
+            animation: pulse 0.5s alternate 3;
+            /* Ajout de cette ligne */
         }
+
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
-            /* Style pour l'icône 9 */
+
+        /* Style pour l'icône 9 */
         .icone9 img {
-        max-height: 190px; /* Ajustez la hauteur selon vos besoins */
-        max-width: 190px;  /* Ajustez la largeur selon vos besoins */
-        margin-left: 15px;
-        margin-bottom: -22px;
-    }
+            max-height: 190px;
+            /* Ajustez la hauteur selon vos besoins */
+            max-width: 190px;
+            /* Ajustez la largeur selon vos besoins */
+            margin-left: 15px;
+            margin-bottom: -22px;
+        }
+
         /* Style pour les nouveaux logos */
         .nouveaux-logos {
             display: flex;
             justify-content: center;
             align-items: center;
-			margin-top: 80px; /* Ajoutez cette ligne pour augmenter l'espace entre les lignes */
+            margin-top: 80px;
+            /* Ajoutez cette ligne pour augmenter l'espace entre les lignes */
         }
+
         .nouveaux-logos img {
-            max-height: 160px; /* Ajustez la hauteur selon vos besoins */
-            margin: 0 60px; /* Espacement entre les logos */
+            max-height: 160px;
+            /* Ajustez la hauteur selon vos besoins */
+            margin: 0 60px;
+            /* Espacement entre les logos */
         }
     </style>
     <script>
@@ -93,7 +116,7 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
             var tournois = document.querySelectorAll('input[name^="tournoi"]:checked');
             var nombreDeCasesCochees = tournois.length;
             // Duration in mS of the setTimeout function 
-            var msgduration = 800; 
+            var msgduration = 1000;
             console.log("Nombre de cases cochees : " + nombreDeCasesCochees);
 
             var errorMessage = document.getElementById('error-message');
@@ -132,6 +155,9 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
                 for (var i = 0; i < tournois.length; i++) {
                     console.log("Tournoi " + (i + 1) + " : " + tournois[i].value);
                 }
+                // mettre dans la variable super globale le nom et prénom du participant qu'il a saisi
+                // pour pouvoir les utiliser dans la page verifierMembre.php et la page valideInscription.php
+
 
                 // ici le formulaire est valide, il faut vérifier si le participant est un membre du club, pour cela il le vérifier dans la table adherents
 
@@ -141,8 +167,9 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
 
                 // Code AJAX pour vérifier si le participant est un membre du club
                 var xhr = new XMLHttpRequest();
-                xhr.open('POST', 'verifierMembre.php', true); // Assuming that 'verifierMembre.php' is located in the 'source' folder
-                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                console.log("Vérification de l'existence du membre : " + nom + " " + prenom);
+                var url = 'verifierMembre.php?nom=' + encodeURIComponent(nom) + '&prenom=' + encodeURIComponent(prenom);
+                xhr.open('GET', url, true); // Assuming that 'verifierMembre.php' is located in the 'source' folder
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === 4 && xhr.status === 200) {
                         var response = JSON.parse(xhr.responseText);
@@ -160,26 +187,20 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
                         }
                     }
                 };
-                var formData = new FormData();
-                formData.append('nom', nom);
-                formData.append('prenom', prenom);
-                for (var i = 0; i < tournois.length; i++) {
-                    formData.append('tournoiId' + (i + 1), tournois[i].value);
-                }
-                xhr.send(formData);
+                xhr.send();
             }
         }
     </script>
 </head>
 
 <body>
-<?php
+    <?php
     // Liens à exécuter (remplacez par vos propres URLs)
     $lien1 = 'https://lespétanquistesputeaux.com';
     $lien2 = 'https://lespétanquistesputeaux.com/A-propos/';
     $lien3 = 'https://lespétanquistesputeaux.com/Charte/';
     $lien4 = 'https://lespétanquistesputeaux.com/Contacts/';
-    $lien5 = 'https://lespétanquistesputeaux.com/Tournois/';
+    $lien5 = 'https://lespétanquistesputeaux.com/LPP/source/tournoi.php';
     $lien6 = 'https://lespétanquistesputeaux.com/Liste-Partenaires/';
     $lien7 = 'https://lespétanquistesputeaux.com/INFOS/';
     $lien8 = 'https://lespétanquistesputeaux.com/LES/';
@@ -195,29 +216,35 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
     $icone6 = '<a href="' . $lien6 . '"><i class="icone"><img src="../images/partenairesUrl.png" alt="Icône6"></i></a>';
     $icone7 = '<a href="' . $lien7 . '"><i class="icone"><img src="../images/infosUrl.jpg" alt="Icône7"></i></a>';
     $icone8 = '<a href="' . $lien8 . '"><i class="icone"><img src="../images/lesplusUrl.gif" alt="Icône8"></i></a>';
-    
+
     // Icône 9 avec la classe spécifique
     $icone9 = '<a href="' . $lien9 . '"><i class="icone icone9"><img src="../images/sponsorsUrl.jpg" alt="Icône9"></i></a>';
 
-    
+
     // Affichage des icônes avec les liens
     echo $icone1 . $icone2 . $icone3 . $icone4 . $icone5 . $icone6 . $icone7 . $icone8 . $icone9;
-	echo '<br>'; // Saut de ligne
-	
-?>
+    echo '<br>'; // Saut de ligne
+
+    ?>
 
     <div id="error-message"></div>
     <form method="post" action="valideInscription.php">
         <?php
+        error_log("Debut de la page formulaireInscription.php"); // Ajoutez cette ligne
         // Nombre de tournois ouverts
         $result = $db->query("SELECT id, nom FROM tournois WHERE etat=1");
         $tournois = [];
+
         while ($row = $result->fetchArray()) {
             $tournois[] = $row;
         }
+        // Code to post the variable to another page
+        if (!empty($_POST['tournois'])) {
+            $tournois = $_POST['tournois'];
+        }
         echo '<h1>Formulaire d\'inscription</h1>';
         if (!empty($tournois)) {
-            // Il y a des tournois ouverts
+            // Il y a au moins un tournoi ouvert
             echo '<form method="post" action="valideInscription.php">
                     <label for="nom">Nom:</label><br>
                     <input type="text" id="nom" name="nom"><br>
@@ -226,12 +253,21 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
                     <label for="tournoi">Tournoi:</label><br>              
                     ';
             error_log("Affichage des donnees du formulaire pour l'inscription"); // Ajoutez cette ligne
-            // Ajouter une variable pour stockert le nombre de tournois ouverts
+            // Ajouter une variable pour stocker le nombre de tournois ouverts
             $nombreTournoisOuverts = count($tournois);
+            $i = 0;
             // Afficher les tournois ouverts
             error_log("Nombre de tournois ouverts : " . $nombreTournoisOuverts); // Ajoutez cette ligne
+            // Récupérer le nom et le prénom du participant dans l'url
+
+
+            // Est ce utile de récupérer le nom et le prénom du participant dans l'url ?
+            // $nom = isset($_GET['nom']) ? $_POST['nom'] : ''; // Assuming that 'nom' is the name of the input field for the name
+            // $prenom = isset($_GET['prenom']) ? $_POST['prenom'] : ''; // Assuming that 'prenom' is the name of the input field for the first name
+            // // error_log("nom : " . $nom . " prenom : " . $prenom); // Ajoutez cette ligne
             foreach ($tournois as $tournoi) {
                 $tournoiId = $tournoi['id'];
+
                 // loguer le nombre de participants pour chaque tournoi
                 $participantCountResult = $db->query("SELECT COUNT(*) as count FROM participants WHERE tournoiId1='$tournoiId' OR tournoiId2='$tournoiId' OR tournoiId3='$tournoiId' OR tournoiId4='$tournoiId'");
                 $participantCountRow = $participantCountResult->fetchArray();
@@ -239,28 +275,39 @@ if (isset($_SESSION['message']) && basename($_SERVER['PHP_SELF']) !== 'valideIns
                 $dateResult = $db->query("SELECT date FROM tournois WHERE id='$tournoiId'");
                 $dateRow = $dateResult->fetchArray();
                 $date = $dateRow['date'];
-                error_log("Tournoi ID : " . $tournoiId . " - Nom du tournoi : " . $tournoi['nom'] . " Date : " . $date . " Inscrits : " . $participantCount); // Ajoutez cette ligne
-                echo '<input type="checkbox" id="tournoi' . $tournoiId . '" name="tournoi[]" value="' . $tournoiId . '"><label for="tournoi' . $tournoiId . '">' . $tournoi['nom'] . ' (' . $date . ') (' . $participantCount . ' inscrits)</label><br>';
-            }
-            // il faut ajouter les tournois Id restants avant de poster dans le formulaire d'inscription avec la valeur null
-            for ($i = 0; $i < 4 - $nombreTournoisOuverts; $i++) {
-                if ($i == 0 && $nombreTournoisOuverts == 1) {
-                    echo '<input type="hidden" name="tournoi[]" value="' . $tournois[0]['id'] . '">';
-                } else {
-                    echo '<input type="hidden" name="tournoi[]" value=0>';
+
+                if ($i == 0) {
+                    $tournoiId1 = $tournoiId;
+                    error_log("Tournoi ID : " . $tournoiId . " - Nom du tournoi : " . $tournoi['nom'] . " Date : " . $date . " Inscrits : " . $participantCount); // Ajoutez cette ligne
+                    echo '<input type="checkbox" id="tournoi' . $tournoiId1 . '" name="tournoi[]" value="' . $tournoiId1 . '"><label for="tournoi' . $tournoiId . '">' . $tournoi['nom'] . ' (' . $date . ') (' . $participantCount . ' inscrits)</label><br>';
                 }
+                if ($i == 1) {
+                    $tournoiId2 = $tournoiId;
+                    error_log("Tournoi ID : " . $tournoiId . " - Nom du tournoi : " . $tournoi['nom'] . " Date : " . $date . " Inscrits : " . $participantCount); // Ajoutez cette ligne
+                    echo '<input type="checkbox" id="tournoi' . $tournoiId2 . '" name="tournoi[]" value="' . $tournoiId2 . '"><label for="tournoi' . $tournoiId . '">' . $tournoi['nom'] . ' (' . $date . ') (' . $participantCount . ' inscrits)</label><br>';
+                }
+                if ($i == 2) {
+                    $tournoiId3 = $tournoiId;
+                    error_log("Tournoi ID : " . $tournoiId . " - Nom du tournoi : " . $tournoi['nom'] . " Date : " . $date . " Inscrits : " . $participantCount); // Ajoutez cette ligne
+                    echo '<input type="checkbox" id="tournoi' . $tournoiId3 . '" name="tournoi[]" value="' . $tournoiId3 . '"><label for="tournoi' . $tournoiId . '">' . $tournoi['nom'] . ' (' . $date . ') (' . $participantCount . ' inscrits)</label><br>';
+                }
+                if ($i == 3) {
+                    $tournoiId4 = $tournoiId;
+                    error_log("Tournoi ID : " . $tournoiId . " - Nom du tournoi : " . $tournoi['nom'] . " Date : " . $date . " Inscrits : " . $participantCount); // Ajoutez cette ligne
+                    echo '<input type="checkbox" id="tournoi' . $tournoiId4 . '" name="tournoi[]" value="' . $tournoiId4 . '"><label for="tournoi' . $tournoiId . '">' . $tournoi['nom'] . ' (' . $date . ') (' . $participantCount . ' inscrits)</label><br>';
+                }
+                $i++;
             }
         } else {
             // Il n'y a pas de tournois ouverts
             echo '<p class="no-tournament-message">Vous ne pouvez pas vous inscrire pour l\'instant, il n\'y a pas de tournoi ouvert</p>';
         }
 
-
         ?>
         <!-- Vos champs de formulaire ici -->
         <button type="submit">Je m'inscris</button>
     </form>
-
+    <p style='text-align: left; font-size: 25px;'><a href='listeParticipantsAuxTournois.php'>Liste des participants aux tournois</a></p>
 </body>
 
 </html>

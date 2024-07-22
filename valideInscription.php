@@ -6,7 +6,7 @@ ob_start();
 <html>
 
 
-<body>
+<!-- <body>
     <form method="POST" action="valideInscription.php">
         <label for="nom">Nom:</label>
         <input type="text" name="nom" id="nom" required>
@@ -27,25 +27,38 @@ ob_start();
         <input type="checkbox" name="tournoiId4" id="tournoiId4" value="1" <?php if (isset($_POST['tournoiId4']) && $_POST['tournoiId4'] == '0') echo 'checked'; ?>>
         <br>
         <input type="submit" value="Submit">
-    </form>
+    </form> -->
 
     <?php
     // Debugging code
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 
-    // Rest of your code...
-    // formulaireInscription.php
-    error_log("Le formulaire a ete soumis"); // Ajoutez cette ligne
-    error_log("Inscription d'un nouveau participant" . print_r($_POST, true)); // Ajoutez cette ligne
+    error_log("Debut de la page valideInscription.php"); // Ajoutez cette ligne
 
-    $nom = isset($_POST['nom']) ? $_POST['nom'] : 0;
-    $prenom = isset($_POST['prenom']) ? $_POST['prenom'] : 0;
-    $tournoiId1 = isset($_POST['tournoiId1']) ? $_POST['tournoiId1'] : 0;
-    $tournoiId2 = isset($_POST['tournoiId2']) ? $_POST['tournoiId2'] : 0;
-    $tournoiId3 = isset($_POST['tournoiId3']) ? $_POST['tournoiId3'] : 0;
-    $tournoiId4 = isset($_POST['tournoiId4']) ? $_POST['tournoiId4'] : 0;
-    error_log("nom: $nom, prénom: $prenom, tournoiId1: $tournoiId1, tournoiId2: $tournoiId2, tournoiId3: $tournoiId3, tournoiId4: $tournoiId4"); // Ajoutez cette ligne
+    // Récupère les valeurs passées en paramètres dans l'URL
+    // $nom = isset($_GET['nom']) ? $_GET['nom'] : '';
+    // $prenom = isset($_GET['prenom']) ? $_GET['prenom'] : '';
+    
+    // formulaireInscription.php
+
+    if (isset($_POST['nom']) && isset($_POST['prenom'])) {
+        $nom = $_POST['nom'];
+        $prenom = $_POST['prenom'];
+    }
+
+    error_log("nom: $nom, prénom: $prenom"); // Ajoutez cette ligne
+
+    // $nom = isset($_POST['nom']) ? $_POST['nom'] : 0;
+    // $prenom = isset($_POST['prenom']) ? $_POST['prenom'] : 0;
+    // $tournoiId1 = isset($_POST['tournoiId1']) ? $_POST['tournoiId1'] : 0;
+    // $tournoiId2 = isset($_POST['tournoiId2']) ? $_POST['tournoiId2'] : 0;
+    // $tournoiId3 = isset($_POST['tournoiId3']) ? $_POST['tournoiId3'] : 0;
+    // $tournoiId4 = isset($_POST['tournoiId4']) ? $_POST['tournoiId4'] : 0;
+    $tournois = [];
+    $tournois = isset($_POST['tournoi']) ? $_POST['tournoi'] : 0;
+    error_log("Tournois sélectionnés : " . print_r($tournois, true)); // Ajoutez cette ligne
+    // error_log("nom: $nom, prénom: $prenom, tournoiId1: $tournoiId1, tournoiId2: $tournoiId2, tournoiId3: $tournoiId3, tournoiId4: $tournoiId4"); // Ajoutez cette ligne
     $db = new SQLite3('petanqueLPP.db');
 
     // Création des tables si elles n'existent pas encore
@@ -53,12 +66,18 @@ ob_start();
     $db->exec("CREATE TABLE IF NOT EXISTS tournois (id INTEGER PRIMARY KEY, nom TEXT, date TEXT, time TEXT, nom_joueurs_max INT, type TEXT, etat INTEGER)");
     $db->exec("CREATE TABLE IF NOT EXISTS participants (id INTEGER PRIMARY KEY, adherentId INTEGER, tournoiId1 INTEGER, tournoiId2 INTEGER, tournoiId3 INTEGER, tournoiId4 INTEGER)");
 
-    error_log("Insertion reussie"); // Ajoutez cette ligne
     if (isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] === "POST") {
         error_log("Le formulaire a ete soumis"); // Ajoutez cette ligne
 
         // Inscription d'un nouveau participant au tournoi
-        error_log("Inscription d'un nouveau participant : " . print_r($_POST, true)); // Ajoutez cette ligne
+        error_log("Inscription d'un nouveau participant: " . print_r($_POST, true)); // Ajoutez cette ligne
+        // mettre $_POST dans tournoiId1, tournoiId2, tournoiId3, tournoiId4 
+        $tournoiId1 = $tournois[0];
+        $tournoiId2 = $tournois[1];
+        $tournoiId3 = $tournois[2];
+        $tournoiId4 = $tournois[3];
+
+        
         error_log("nom: $nom, prénom: $prenom, tournoiId1: $tournoiId1, tournoiId2: $tournoiId2, tournoiId3: $tournoiId3, tournoiId4: $tournoiId4"); // Ajoutez cette ligne
 
         // Récupérer l'ID de l'adhérent à partir du nom et du prénom
@@ -87,7 +106,6 @@ ob_start();
                     error_log("Colonne : $key, Valeur : $value"); // Ajoutez cette ligne
                 }
 
-                // Vérifier si l'adhérent est déjà inscrit aux mêmes tournois
                 // Vérifier si l'adhérent est déjà inscrit aux tournois
                 $stmt = $db->prepare("SELECT * FROM participants WHERE adherentId = ?");
                 $stmt->bindValue(1, $adherentId, SQLITE3_INTEGER);
@@ -95,12 +113,16 @@ ob_start();
 
                 // Vérifier si l'adhérent est déjà inscrit
                 if ($participantRow = $participantResult->fetchArray()) {
+                    error_log("Adherent deja inscrit aux tournois, prend en compte ses nouveaux choix"); // Ajoutez cette ligne
+                    error_log("nom: $nom, prénom: $prenom, tournoiId1: $tournoiId1, tournoiId2: $tournoiId2, tournoiId3: $tournoiId3, tournoiId4: $tournoiId4"); // Ajoutez cette ligne
                     // Mettre à jour les tournois existants avec les nouvelles valeurs
                     $db->exec("UPDATE participants SET tournoiId1 = '$tournoiId1', tournoiId2 = '$tournoiId2', tournoiId3 = '$tournoiId3', tournoiId4 = '$tournoiId4' WHERE adherentId = '$adherentId'");
                     header("Location: successInscription.html");
                     $_SESSION['message'] = "Adherent deja inscrit, prend en compte ses nouveaux choix";
                     exit();
                 } else {
+                    error_log("Adherent inscrit pour la premiere fois, prend en compte ses tournois"); // Ajoutez cette ligne
+                    error_log("nom: $nom, prénom: $prenom, tournoiId1: $tournoiId1, tournoiId2: $tournoiId2, tournoiId3: $tournoiId3, tournoiId4: $tournoiId4"); // Ajoutez cette ligne
                     // Insérer un nouvel enregistrement dans la table participants
                     $db->exec("INSERT INTO participants (adherentId, tournoiId1, tournoiId2, tournoiId3, tournoiId4) VALUES ('$adherentId', '$tournoiId1', '$tournoiId2', '$tournoiId3', '$tournoiId4')");
                     header("Location: successInscription.html");

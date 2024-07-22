@@ -51,7 +51,7 @@
     $lien2 = 'https://lespétanquistesputeaux.com/A-propos/';
     $lien3 = 'https://lespétanquistesputeaux.com/Charte/';
     $lien4 = 'https://lespétanquistesputeaux.com/Contacts/';
-    $lien5 = 'https://lespétanquistesputeaux.com/Tournois/';
+    $lien5 = 'https://lespétanquistesputeaux.com/LPP/source/tournoi.php';
     $lien6 = 'https://lespétanquistesputeaux.com/Liste-Partenaires/';
     $lien7 = 'https://lespétanquistesputeaux.com/INFOS/';
     $lien8 = 'https://lespétanquistesputeaux.com/LES/';
