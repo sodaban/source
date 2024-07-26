@@ -27,9 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tournoiId4 = isset($_POST['tournoiId4']) ? (int)$_POST['tournoiId4'] : null;
 
     // Mise à jour des participants dans la table participants
-    $db->exec("UPDATE participants SET tournoiId1 = $tournoiId1, tournoiId2 = $tournoiId2, tournoiId3 = $tournoiId3, tournoiId4 = $tournoiId4 WHERE adherentId = $adherent_id");
+    $stmt = $db->prepare("UPDATE participants SET tournoiId1 = ?, tournoiId2 = ?, tournoiId3 = ?, tournoiId4 = ? WHERE adherentId = ?");
+    $stmt->bindValue(1, $tournoiId1, SQLITE3_INTEGER);
+    $stmt->bindValue(2, $tournoiId2, SQLITE3_INTEGER);
+    $stmt->bindValue(3, $tournoiId3, SQLITE3_INTEGER);
+    $stmt->bindValue(4, $tournoiId4, SQLITE3_INTEGER);
+    $stmt->bindValue(5, $adherent_id, SQLITE3_INTEGER);
+    $stmt->execute();
 
-    header("Location: inscrireParticipantsPourTest.php");
+    header("Location: inscrireParticipantsPourTest.php?updated=1");
     exit;
 }
 ?>

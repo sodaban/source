@@ -12,6 +12,7 @@
         <li><a href="supprimeTableParticipants.php">Supprimer tous les participants de tous les tournois ourverts. (A utiliser avec précaution)</span></a></li>
         <li><a href="modifieSupprimeParticipants.php">Modifier ou Supprimer des participants aux tournois</a></li>
         <li><a href="modifieDonneesTournois.php">Modifier les données des tournois</a></li>
+        <li><a href="inscrireParticipantsPourTest.php">Inscrire les participants aux tournois pour une campagne de test</a></li>
     </ul>
 
     <p>Vous pouvez effectuer les actions suivantes sur les adhérents:</p>

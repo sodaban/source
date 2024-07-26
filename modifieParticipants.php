@@ -16,7 +16,7 @@ if (isset($_POST['submit'])) {
     header("Location: modifieSupprimeParticipants.php");
 }
 
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? $_GET['id'] : null;
 $result = $db->query("
     SELECT participants.*, adherents.nom, adherents.prenom
     FROM participants

@@ -26,9 +26,40 @@ while ($participant = $participantsQuery->fetchArray(SQLITE3_ASSOC)) {
 <head>
     <meta charset="UTF-8">
     <title>Inscrire des Participants</title>
+    <script>
+        // Rafraîchir la page si le paramètre 'updated' est présent dans l'URL
+        window.onload = function() {
+            if (window.location.search.includes('updated=1')) {
+                <?php
+                    // Connexion à la base de données SQLite
+                    $db = new SQLite3('petanqueLPP.db');
+
+                    // Récupération des choix existants des participants
+                    $participants = [];
+                    $participantsQuery = $db->query("SELECT * FROM participants");
+                    while ($participant = $participantsQuery->fetchArray(SQLITE3_ASSOC)) {
+                        $participants[$participant['adherentId']] = $participant;
+                    }
+
+                    // Ajouter des logs pour chaque participant et leur choix de tournois
+                    foreach ($participants as $adherentId => $participant) {
+                        $adherent = $db->querySingle("SELECT nom, prenom FROM adherents WHERE id = $adherentId", true);
+                        error_log("Participant: " . $adherent['nom'] . " " . $adherent['prenom']);
+                        foreach ($tournoisList as $tournoi) {
+                            $tournoiId = $tournoi['id'];
+                            $selected = isset($participant["tournoiId$tournoiId"]) ? 'Oui' : 'Non';
+                            error_log("Tournoi ID: $tournoiId, Choix: $selected");
+                        }
+                    }
+                ?>
+                window.location.href = window.location.pathname;
+            }
+        };
+    </script>
+
 </head>
 <body>
-    <h1>Inscription des Participants aux Tournois Ouverts</h1>
+    <h1>Inscription des Participants aux Tournois pour campagne de test</h1>
     <table border="1">
         <tr>
             <th>ID</th>
@@ -50,7 +81,7 @@ while ($participant = $participantsQuery->fetchArray(SQLITE3_ASSOC)) {
                 ?>
                     <td><?php echo $selected; ?></td>
                 <?php } ?>
-                <td><a href="validerChoixTournoi.php?adherent_id=<?php echo $adherent['id']; ?>">Modifier</a></td>
+                <td><a href="validerChoixTournoiPourTest.php?adherent_id=<?php echo $adherent['id']; ?>">Modifier</a></td>
             </tr>
         <?php } ?>
     </table>

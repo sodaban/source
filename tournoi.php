@@ -102,7 +102,7 @@ try {
 }
 
 // Requête pour récupérer les tournois ouverts (état = 1)
-$result = $db->query("SELECT * FROM tournois WHERE etat = 1");
+$result = $db->query("SELECT * FROM tournois WHERE etat = 1 LIMIT 4");
 
 // Ajout du style pour centrer le tableau
 echo "<style>
